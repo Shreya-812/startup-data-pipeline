@@ -6,25 +6,40 @@ from scoring.propensity_model import score_person
 
 
 def generate_leads():
+    """
+    Generates ranked leads as a pandas DataFrame.
+    No disk writes. Streamlit-safe.
+    """
     pmids = search_pubmed("3D in vitro liver toxicity", max_results=15)
+
+    if not pmids:
+        return pd.DataFrame(columns=[
+            "rank", "name", "title", "company",
+            "location", "email", "score"
+        ])
+
     people = fetch_details(pmids)
 
     enriched = []
     for p in people:
-        p["email"] = infer_email(p["name"], p["company"])
-        p["location"] = extract_location(p["company"])
-        p["score"] = score_person(p)
-        enriched.append(p)
+        enriched.append({
+            "name": p.get("name"),
+            "title": p.get("title"),
+            "company": p.get("company"),
+            "location": extract_location(p.get("company")),
+            "email": infer_email(p.get("name"), p.get("company")),
+            "score": score_person(p)
+        })
 
     df = pd.DataFrame(enriched)
-    df = df.sort_values("score", ascending=False)
-    df["rank"] = range(1, len(df) + 1)
+    df = df.sort_values("score", ascending=False).reset_index(drop=True)
+    df.insert(0, "rank", df.index + 1)
 
-    # ❌ NO df.to_csv() HERE — EVER
     return df
 
 
+# Optional: local-only testing
 if __name__ == "__main__":
-    # Optional: local-only debug run
     df = generate_leads()
-    df.to_csv("data/output_leads.csv", index=False)
+    df.to_csv("output.lead.csv", index=False)
+    print("Saved output.lead.csv locally")
