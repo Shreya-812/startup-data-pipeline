@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
-
+import os
+import subprocess
 
 st.set_page_config(
     page_title="Startup Lead Scoring Dashboard",
@@ -10,11 +11,23 @@ st.set_page_config(
 st.title("🔬 Startup Lead Scoring Dashboard")
 st.caption("Reproducible lead-ranking pipeline based on public scientific data")
 
-@st.cache_data
-def load_data():
-    return pd.read_csv("data/output_leads.csv")
+CSV_PATH = "data/output_leads.csv"
 
-df = load_data()
+
+@st.cache_data
+def load_or_generate_data():
+    # If CSV doesn't exist, generate it by running main.py
+    if not os.path.exists(CSV_PATH):
+        with st.spinner("Generating lead data (first run)..."):
+            subprocess.run(
+                ["python", "main.py"],
+                check=True
+            )
+
+    return pd.read_csv(CSV_PATH)
+
+
+df = load_or_generate_data()
 
 # Sidebar filters
 st.sidebar.header("Filters")
@@ -40,14 +53,11 @@ if keyword:
         )
     ]
 
-# Sorting
 filtered_df = filtered_df.sort_values("score", ascending=False)
 
-# Display
 st.subheader(f"Results ({len(filtered_df)} leads)")
 st.dataframe(filtered_df, use_container_width=True)
 
-# Download
 st.download_button(
     label="⬇️ Download CSV",
     data=filtered_df.to_csv(index=False),
