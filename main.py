@@ -5,8 +5,7 @@ from enrichment.location_parser import extract_location
 from scoring.propensity_model import score_person
 
 
-def run():
-    print("🔍 Searching PubMed...")
+def generate_leads(output_path="data/output_leads.csv"):
     pmids = search_pubmed("3D in vitro liver toxicity", max_results=15)
     people = fetch_details(pmids)
 
@@ -21,9 +20,9 @@ def run():
     df = df.sort_values("score", ascending=False)
     df["rank"] = range(1, len(df) + 1)
 
-    df.to_csv("data/output_leads.csv", index=False)
-    print("✅ Output written to data/output_leads.csv")
+    df.to_csv(output_path, index=False)
+    return df
 
 
 if __name__ == "__main__":
-    run()
+    generate_leads()
