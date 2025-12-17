@@ -1,4 +1,3 @@
-import os
 import pandas as pd
 from data_sources.pubmed import search_pubmed, fetch_details
 from enrichment.email_infer import infer_email
@@ -6,7 +5,7 @@ from enrichment.location_parser import extract_location
 from scoring.propensity_model import score_person
 
 
-def generate_leads(output_path=None):
+def generate_leads():
     pmids = search_pubmed("3D in vitro liver toxicity", max_results=15)
     people = fetch_details(pmids)
 
@@ -21,9 +20,11 @@ def generate_leads(output_path=None):
     df = df.sort_values("score", ascending=False)
     df["rank"] = range(1, len(df) + 1)
 
-    # ✅ Only write to disk if path is provided
-    if output_path:
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        df.to_csv(output_path, index=False)
-
+    # ❌ NO df.to_csv() HERE — EVER
     return df
+
+
+if __name__ == "__main__":
+    # Optional: local-only debug run
+    df = generate_leads()
+    df.to_csv("data/output_leads.csv", index=False)
