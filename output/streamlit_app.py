@@ -26,8 +26,9 @@ def load_or_generate_data():
     if os.path.exists(CSV_PATH):
         return pd.read_csv(CSV_PATH)
 
-    # Generate data directly (no subprocess)
-    return generate_leads(CSV_PATH)
+    # Generate in-memory dataframe (cloud-safe)
+    return generate_leads()
+
 
 
 df = load_or_generate_data()
