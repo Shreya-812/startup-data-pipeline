@@ -23,8 +23,11 @@ CSV_PATH = "data/output_leads.csv"
 
 @st.cache_data
 def load_or_generate_data():
-    return generate_leads()
+    if os.path.exists(CSV_PATH):
+        return pd.read_csv(CSV_PATH)
 
+    # Generate in-memory dataframe (cloud-safe)
+    return generate_leads()
 
 
 
